@@ -25,6 +25,8 @@ public class ContactoSim implements InterfazContactoSim {
     private List<Entidad> entidades;
     @Value("${servicio.url}")
     private String url;
+    private SolicitudApi solicitudApi;
+    private ResultadosApi resultadosApi;
 
     public ContactoSim(){
         this.solicitudes = new HashMap<>();
@@ -33,6 +35,8 @@ public class ContactoSim implements InterfazContactoSim {
         this.entidades.add( new Entidad(1,"Entidad 1","Descripción 1"));
         this.entidades.add( new Entidad(2,"Entidad 2","Descripción 2"));
         this.entidades.add( new Entidad(3,"Entidad 3","Descripción 3"));
+        this.solicitudApi = new SolicitudApi();
+        this.resultadosApi = new ResultadosApi();
     }
     @Override
     public int solicitarSimulation(DatosSolicitud datosSolicitud) {
@@ -40,8 +44,7 @@ public class ContactoSim implements InterfazContactoSim {
             return -1;
         }
         try {
-            SolicitudApi solicitudApi = new SolicitudApi();
-            solicitudApi.getApiClient().setBasePath(this.url);
+            this.solicitudApi.getApiClient().setBasePath(this.url);
 
             Solicitud solicitud = new Solicitud();
             List<Integer> cantidades = new ArrayList<>();
@@ -58,7 +61,7 @@ public class ContactoSim implements InterfazContactoSim {
             solicitud.setCantidadesIniciales(cantidades);
             solicitud.setNombreEntidades(nombres);
 
-            SolicitudResponse respuesta = solicitudApi.solicitudSolicitarPost("user", solicitud);
+            SolicitudResponse respuesta = this.solicitudApi.solicitudSolicitarPost("user", solicitud);
             if(respuesta.getTokenSolicitud()!=null){
                 return respuesta.getTokenSolicitud();
             }
@@ -70,9 +73,8 @@ public class ContactoSim implements InterfazContactoSim {
     @Override
     public DatosSimulation descargarDatos(int token) {
         try{
-            ResultadosApi resultadosApi = new ResultadosApi();
-            resultadosApi.getApiClient().setBasePath(this.url);
-            ResultsResponse resultsResponse = resultadosApi.resultadosPost("user",token);
+            this.resultadosApi.getApiClient().setBasePath(this.url);
+            ResultsResponse resultsResponse = this.resultadosApi.resultadosPost("user",token);
 
             String [] data = resultsResponse.getData().split("\n");
             int anchoTablero = Integer.parseInt(data[0].trim());
@@ -114,5 +116,14 @@ public class ContactoSim implements InterfazContactoSim {
     @Override
     public boolean isValidEntityId(int id) {
         return this.entidades.stream().anyMatch(e -> e.getId() == id);
+    }
+    public void setUrl(String url){
+        this.url = url;
+    }
+    public void setSolicitudApi(SolicitudApi solicitudApi) {
+        this.solicitudApi = solicitudApi;
+    }
+    public void setResultadosApi(ResultadosApi resultadosApi) {
+        this.resultadosApi = resultadosApi;
     }
 }
