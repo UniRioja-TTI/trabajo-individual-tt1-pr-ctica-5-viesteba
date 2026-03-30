@@ -1,0 +1,18 @@
+services:
+  servicio-consumible:
+    image: javillour/servicio-tt1:amd64
+    networks:
+      - backend
+  mi-trabajo:
+    image: mi-trabajo
+    environment:
+      - SERVICIO_URL=http://servicio-consumible:8080
+    ports:
+      - 8081:8081
+    depends_on:
+      - servicio-consumible
+    networks:
+      - backend
+networks:
+  backend:
+    driver: bridge

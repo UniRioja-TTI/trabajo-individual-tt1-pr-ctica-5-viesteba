@@ -1,5 +1,6 @@
 package servicios;
 
+import com.tt1.trabajo.utilidades.ApiClient;
 import com.tt1.trabajo.utilidades.ApiException;
 import com.tt1.trabajo.utilidades.api.SolicitudApi;
 import com.tt1.trabajo.utilidades.model.ResultsResponse;
@@ -10,6 +11,7 @@ import modelo.DatosSimulation;
 import modelo.DatosSolicitud;
 import modelo.Entidad;
 import modelo.Punto;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.tt1.trabajo.utilidades.api.ResultadosApi;
@@ -28,15 +30,21 @@ public class ContactoSim implements InterfazContactoSim {
     private SolicitudApi solicitudApi;
     private ResultadosApi resultadosApi;
 
-    public ContactoSim(){
+    public ContactoSim() {
+        this("http://localhost:8080");
+    }
+    @Autowired
+    public ContactoSim(@Value("${servicio.url}")String servicioUrl){
         this.solicitudes = new HashMap<>();
         this.RANDOM = new Random();
         this.entidades = new ArrayList<>();
         this.entidades.add( new Entidad(1,"Entidad 1","Descripción 1"));
         this.entidades.add( new Entidad(2,"Entidad 2","Descripción 2"));
         this.entidades.add( new Entidad(3,"Entidad 3","Descripción 3"));
-        this.solicitudApi = new SolicitudApi();
-        this.resultadosApi = new ResultadosApi();
+        ApiClient apiClient = new ApiClient();
+        apiClient.setBasePath(servicioUrl);
+        this.solicitudApi = new SolicitudApi(apiClient);
+        this.resultadosApi = new ResultadosApi(apiClient);
     }
     @Override
     public int solicitarSimulation(DatosSolicitud datosSolicitud) {
@@ -44,8 +52,6 @@ public class ContactoSim implements InterfazContactoSim {
             return -1;
         }
         try {
-            this.solicitudApi.getApiClient().setBasePath(this.url);
-
             Solicitud solicitud = new Solicitud();
             List<Integer> cantidades = new ArrayList<>();
             List<String> nombres = new ArrayList<>();
@@ -73,7 +79,6 @@ public class ContactoSim implements InterfazContactoSim {
     @Override
     public DatosSimulation descargarDatos(int token) {
         try{
-            this.resultadosApi.getApiClient().setBasePath(this.url);
             ResultsResponse resultsResponse = this.resultadosApi.resultadosPost("user",token);
 
             String [] data = resultsResponse.getData().split("\n");
